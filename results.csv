@@ -1,0 +1,7 @@
+Model,MAE,RMSE,R2
+Baseline: driver past average,3.532,5.582,0.459
+XGBoost,3.673,5.562,0.463
+Linear Regression,3.927,5.826,0.411
+Random Forest,4.137,6.154,0.342
+Baseline: training median,5.425,7.886,-0.08
+Baseline: trust driver request,9.833,14.833,-2.82

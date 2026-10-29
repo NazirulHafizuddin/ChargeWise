@@ -1,0 +1,14 @@
+Feature,"Importance (MAE increase, kWh)"
+kwh_requested,0.8431554230401248
+driver_past_avg_kwh,0.5668983818192114
+driver_past_ratio,0.32641618472841694
+miles_requested,0.12170468877293246
+driver_past_sessions,0.06531042033993532
+request_hour,0.05377989443028568
+month,0.01824405640488198
+parking_hours,0.01464186933263445
+vehicle_model,0.008543669378662067
+station,0.0005655536634613156
+day_of_week,0.0003190007943013384
+paid_period,0.0
+is_weekend,0.0

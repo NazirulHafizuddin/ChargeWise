@@ -1,0 +1,4 @@
+Model,MAE,RMSE,R2,Scenario
+Random Forest,4.137,6.154,0.342,Main split (test in COVID period)
+Random Forest,2.866,4.479,0.68,Pre-COVID only
+Baseline: driver past average,3.628,5.588,0.502,Pre-COVID only

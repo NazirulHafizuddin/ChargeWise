@@ -1,0 +1,10 @@
+Model,Settings,Validation MAE
+Linear Regression,{},3.389
+Random Forest,"{'max_depth': 12, 'min_samples_leaf': 5}",2.879
+Random Forest,"{'max_depth': 12, 'min_samples_leaf': 20}",2.878
+Random Forest,"{'max_depth': 20, 'min_samples_leaf': 5}",2.887
+Random Forest,"{'max_depth': 20, 'min_samples_leaf': 20}",2.879
+XGBoost,"{'learning_rate': 0.03, 'max_depth': 4}",2.925
+XGBoost,"{'learning_rate': 0.03, 'max_depth': 6}",2.894
+XGBoost,"{'learning_rate': 0.1, 'max_depth': 4}",2.934
+XGBoost,"{'learning_rate': 0.1, 'max_depth': 6}",2.981

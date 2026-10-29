@@ -1,0 +1,7 @@
+Step,Rows,Removed
+Original rows,40979,0
+After removing duplicates,40972,7
+After removing missing target,40485,487
+After removing invalid kWh requests,40477,8
+After removing invalid parking windows,40392,85
+After removing 0 kWh sessions,40087,305
