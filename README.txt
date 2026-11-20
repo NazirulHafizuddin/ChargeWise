@@ -3,7 +3,7 @@ ChargeWise Dashboard | TEB3123 Machine Learning | Group 10
 
 FILES (keep them all in the same folder)
   app.py                  the Streamlit dashboard
-  model.joblib            trained Random Forest pipeline
+  model.joblib            trained XGBoost pipeline
   meta.json               feature lists, dropdown options, fill values
   results.csv             test results for all models and baselines
   tuning.csv              validation results for each model setting
@@ -27,7 +27,6 @@ RUN LOCALLY (VS Code terminal)
 
 DEPLOY (Streamlit Community Cloud, free)
   1. Create a GitHub repository and upload ALL files in this folder.
-     (model.joblib is about 17 MB, under GitHub's 100 MB limit.)
   2. Go to share.streamlit.io, sign in with GitHub, click "Create app".
   3. Pick the repository, branch "main", main file "app.py".
   4. Under Advanced settings, choose Python 3.12 or 3.13, then Deploy.

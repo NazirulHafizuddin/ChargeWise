@@ -163,6 +163,7 @@ FEATURE_LABELS = {
     "request_hour": "Request Hour", "day_of_week": "Day Of Week", "month": "Month", "is_weekend": "Is Weekend",
     "paid_period": "Paid Period", "driver_past_sessions": "Driver Past Sessions",
     "driver_past_avg_kwh": "Driver Past Average kWh", "driver_past_ratio": "Driver Past Delivered ÷ Requested",
+    "driver_recent_avg_kwh": "Driver Recent Average kWh (Last 5)",
     "station": "Station", "vehicle_model": "Vehicle Model",
 }
 
@@ -415,11 +416,20 @@ elif page == "Model Results":
             "The main test period falls during COVID-19. Repeating the experiment on pre-COVID data shows how much error comes from that shift.")
     cv = D["covid"]
     main, pre = cv.iloc[0], cv.iloc[1]
-    metric_cards([("Main Test (COVID Period)", f"R² {main['R2']:.2f}", f"MAE {main['MAE']:.2f} kWh"),
-                  ("Pre-COVID Test", f"R² {pre['R2']:.2f}", f"MAE {pre['MAE']:.2f} kWh"),
-                  ("Pre-COVID Baseline", f"R² {cv.iloc[2]['R2']:.2f}", f"Driver Past Average, MAE {cv.iloc[2]['MAE']:.2f} kWh")])
-    html('<div class="banner info">Before COVID-19 the model clearly beats the simple baseline. The drop in the main test comes from '
-         'changed workplace behaviour, so a real system would need regular retraining.</div>')
+    pre_base = cv.iloc[2:]
+    cards = [("Main Test (COVID Period)", f"R² {main['R2']:.2f}", f"{BEST}, MAE {main['MAE']:.2f} kWh"),
+             ("Pre-COVID Test", f"R² {pre['R2']:.2f}", f"{BEST}, MAE {pre['MAE']:.2f} kWh")]
+    cards += [(tc(r["Model"].replace("Baseline: ", "Pre-COVID Baseline: ")), f"R² {r['R2']:.2f}", f"MAE {r['MAE']:.2f} kWh")
+              for _, r in pre_base.iterrows()]
+    metric_cards(cards)
+    best_base = pre_base["MAE"].min()
+    if pre["MAE"] < best_base:
+        msg = (f"Before COVID-19 the model beats the best simple rule (MAE {pre['MAE']:.2f} vs {best_base:.2f} kWh). "
+               "The drop in the main test comes from changed workplace behaviour, so a real system would need regular retraining.")
+    else:
+        msg = ("Even before COVID-19, a simple rule based on driver history is hard to beat. "
+               "The main value of the model is combining history with the request and timing.")
+    html(f'<div class="banner info">{msg}</div>')
 
     with st.expander("All Results Table"):
         table(R)
@@ -445,7 +455,7 @@ elif page == "Demand Drivers":
                                labels=["Low<br>(<5 kWh)", "Medium<br>(5-10 kWh)", "High<br>(10-20 kWh)", "Very High<br>(>20 kWh)"])
     c1, c2 = st.columns(2, gap="medium")
     with c1:
-        e = p.groupby("Demand Level", observed=True)["abs_error"].mean().reset_index()
+        e_lvl = e = p.groupby("Demand Level", observed=True)["abs_error"].mean().reset_index()
         fig = px.bar(e, x="Demand Level", y="abs_error", color_discrete_sequence=[ACCENT], labels={"abs_error": "MAE (kWh)"})
         chart(style(fig, "Error By Demand Level"), "lvl")
     with c2:
@@ -453,8 +463,11 @@ elif page == "Demand Drivers":
         fig = px.bar(e, x="request_hour", y="abs_error", color_discrete_sequence=[ACCENT_SOFT],
                      labels={"abs_error": "MAE (kWh)", "request_hour": "Request Hour"})
         chart(style(fig, "Error By Request Hour"), "hr")
-    html('<div class="banner info">Errors are highest at the extremes. Very small sessions tend to be over-predicted and very large '
-         'ones under-predicted, while typical 5 to 10 kWh sessions are predicted best.</div>')
+    bias = (p[PRED] - p[TARGET]).groupby(p["Demand Level"], observed=True).mean()
+    best_lvl = e_lvl.sort_values("abs_error").iloc[0]["Demand Level"].replace("<br>", " ")
+    html(f'<div class="banner info">Errors are highest at the extremes. Very small sessions are over-predicted by about '
+         f'{bias.iloc[0]:.1f} kWh on average and very large ones under-predicted by about {abs(bias.iloc[-1]):.1f} kWh, '
+         f'while {best_lvl} sessions are predicted best.</div>')
 
 # ================================================================ PREDICT
 elif page == "Predict":
@@ -484,10 +497,13 @@ elif page == "Predict":
             dep_time = st.time_input("Expected Departure", time(17, 0))
             power = st.selectbox("Charger Power (kW)", [3.3, 6.6, 7.2], index=1)
         st.markdown("**Driver History**" + (" (Not Used: New Driver)" if new_driver else ""))
-        h1, h2, h3 = st.columns(3, gap="medium")
+        h1, h2, h3, h4 = st.columns(4, gap="medium")
         past_n = h1.number_input("Past Sessions", 0, 2000, 30, disabled=new_driver)
-        past_avg = h2.number_input("Past Average Delivered kWh", 0.0, 80.0, 9.0, disabled=new_driver)
-        past_pct = h3.number_input("Usually Takes % Of Request", 0, 300, 70, disabled=new_driver)
+        past_avg = h2.number_input("Past Average Delivered kWh", 0.0, 80.0, 9.0, disabled=new_driver,
+                                   help="Average over ALL of the driver's earlier sessions.")
+        recent_avg = h3.number_input("Recent Average kWh (Last 5)", 0.0, 80.0, 9.0, disabled=new_driver,
+                                     help="Average over the driver's last 5 sessions. Captures recent changes in habit.")
+        past_pct = h4.number_input("Usually Takes % Of Request", 0, 300, 70, disabled=new_driver)
         submitted = st.form_submit_button("Predict")
 
     if submitted:
@@ -512,6 +528,7 @@ elif page == "Predict":
             "driver_past_sessions": 0 if new_driver else past_n,
             "driver_past_avg_kwh": fill["driver_past_avg_kwh"] if new_driver else past_avg,
             "driver_past_ratio": fill["driver_past_ratio"] if new_driver else past_pct / 100,
+            "driver_recent_avg_kwh": fill.get("driver_recent_avg_kwh", fill["driver_past_avg_kwh"]) if new_driver else recent_avg,
             "station": station, "vehicle_model": car,
         }
         X = pd.DataFrame([row])[meta["num_features"] + meta["cat_features"]]

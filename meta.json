@@ -1,5 +1,5 @@
 {
-  "best_model": "Random Forest",
+  "best_model": "XGBoost",
   "num_features": [
     "kwh_requested",
     "miles_requested",
@@ -11,7 +11,8 @@
     "paid_period",
     "driver_past_sessions",
     "driver_past_avg_kwh",
-    "driver_past_ratio"
+    "driver_past_ratio",
+    "driver_recent_avg_kwh"
   ],
   "cat_features": [
     "station",
@@ -19,7 +20,8 @@
   ],
   "fill_values": {
     "driver_past_avg_kwh": 9.272128409395034,
-    "driver_past_ratio": 0.7153914940943691
+    "driver_past_ratio": 0.7153914940943691,
+    "driver_recent_avg_kwh": 9.272128409395034
   },
   "stations": [
     "01A",
